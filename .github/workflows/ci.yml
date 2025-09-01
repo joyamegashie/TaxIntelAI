@@ -1,0 +1,65 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install backend dependencies
+      run: | 
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Start backend server
+      run: | 
+        cd backend
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        sleep 10 # Give the server time to start
+
+    - name: Run backend tests
+      run: | 
+        python test_system.py
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install frontend dependencies
+      run: | 
+        cd frontend/taxintel-frontend
+        pnpm install
+
+    - name: Build frontend
+      run: | 
+        cd frontend/taxintel-frontend
+        pnpm run build
+
+    - name: Verify frontend build exists
+      run: | 
+        ls -la frontend/taxintel-frontend/dist/index.html
+
+    - name: Stop backend server
+      if: always()
+      run: pkill -f uvicorn
+
+

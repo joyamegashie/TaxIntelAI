@@ -1,59 +1,32 @@
-# TaxIntel AI™ - AI-Powered Informal Economy Tax Intelligence Platform
+# TaxIntel AI™
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![React 19+](https://img.shields.io/badge/react-19+-blue.svg)](https://reactjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
+[![CI/CD](https://github.com/joyamegashie/TaxIntelAI/actions/workflows/ci.yml/badge.svg)](https://github.com/joyamegashie/TaxIntelAI/actions/workflows/ci.yml)
 
 TaxIntel AI™ is a comprehensive, AI-powered platform designed to help governments track, analyze, and forecast tax opportunities in the informal economy. Built specifically for African tax authorities, municipalities, and international tax consultants, the platform leverages satellite imagery, machine learning, and advanced analytics to identify untapped revenue sources and optimize tax collection strategies.
 
-## 🌍 Problem Statement
-
-African countries lose over $500 billion annually in untapped tax revenues, with the informal economy representing more than 60% of GDP across the continent. Traditional tax authorities lack visibility into informal markets, street economies, digital businesses, and rural commerce, creating massive revenue gaps that hinder economic development and public service delivery.
-
-## 🚀 Solution Overview
-
-TaxIntel AI™ addresses this challenge through five core capabilities:
-
-### 1. 🏢 Informal Business Locator
-Uses AI and satellite imagery to detect clusters of markets, roadside shops, mobile vendors, garages, and other informal businesses not captured in official records.
-
-### 2. 💰 AI Tax Opportunity Estimator
-Predicts potential tax revenue per region or sector using demographic data, trade volume, business density, and economic activity indicators.
-
-### 3. 📊 GeoFiscal Intelligence Dashboard
-Visualizes untapped tax bases with interactive heatmaps showing regions with high informal economic activity and revenue potential.
-
-### 4. 📈 Policy Simulation & Reporting Tool
-Autogenerates impact reports showing how formalization initiatives or digitized collection strategies could increase tax intake.
-
-### 5. 📱 Mobile Tax Intelligence
-Mobile-friendly interface with real-time updates and guidance for field officers and mobile inspectors on where to focus collection or registration efforts.
-
-## 🏗️ Architecture Overview
-
-TaxIntel AI™ follows a modern, scalable microservices architecture:
+## Project Structure
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Frontend │    │  FastAPI Backend │    │   AI/ML Models  │
-│                 │    │                 │    │                 │
-│ • Dashboard     │◄──►│ • REST APIs     │◄──►│ • Business      │
-│ • Maps          │    │ • Authentication│    │   Detection     │
-│ • Analytics     │    │ • Rate Limiting │    │ • Tax Estimation│
-│ • Reports       │    │ • Security      │    │ • Satellite     │
-└─────────────────┘    └─────────────────┘    │   Analysis      │
-                                              └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │   SQLite/       │
-                    │   PostgreSQL    │
-                    │   Database      │
-                    └─────────────────┘
+TaxIntelAI/
+├── backend/                # FastAPI backend application
+├── frontend/               # React frontend application
+├── ai_models/              # AI/ML models and related code
+├── docs/                   # Project documentation
+├── .gitignore              # Git ignore file
+├── README.md               # Project README
+└── todo.md                 # Task tracking
 ```
 
-## 🛠️ Technology Stack
+## Features
+
+- **Informal Business Locator**: AI-powered detection of unregistered businesses using satellite imagery.
+- **Tax Opportunity Estimator**: Machine learning models to estimate potential tax revenue per region or sector using demographic data, trade volume, business density, and economic activity indicators.
+- **GeoFiscal Intelligence Dashboard**: Visualizes untapped tax bases with interactive heatmaps showing regions with high informal economic activity and revenue potential.
+- **Policy Simulation & Reporting**: Tools to simulate the impact of different tax policies and generate comprehensive reports.
+- **Mobile-Friendly**: Responsive design for access on various devices.
+- **Secure API**: Robust authentication, authorization, and rate-limiting to protect sensitive data.
+
+## Technology Stack
 
 ### Backend
 - **Framework:** FastAPI 0.115.6
@@ -83,7 +56,7 @@ TaxIntel AI™ follows a modern, scalable microservices architecture:
 - **Package Management:** pnpm (frontend), pip (backend)
 - **Version Control:** Git
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before installing TaxIntel AI™, ensure you have the following installed:
 
@@ -93,7 +66,7 @@ Before installing TaxIntel AI™, ensure you have the following installed:
 - **Git**
 - **Docker** (optional, for containerized deployment)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone the Repository
 
@@ -154,7 +127,7 @@ The frontend application will be available at `http://localhost:5173`
    - **Username:** demo
    - **Password:** demo123
 
-## 🔧 Configuration
+## Configuration
 
 ### Backend Configuration (.env)
 
@@ -475,7 +448,7 @@ az container create --resource-group taxintel-rg --name taxintel-backend
 
 ### Health Checks
 - Backend health endpoint: `GET /health`
-- Frontend health endpoint: `GET /health`
+- Frontend health endpoint: `GET /GET /health`
 - Database connectivity monitoring
 - External API availability checks
 
