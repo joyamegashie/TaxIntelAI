@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # or "pip", "maven", "composer", etc.
+    directory: "/"           # Location of package manifests
+    schedule:
+      interval: "daily"      # Options: daily, weekly, monthly
+      time: "06:00"          # UTC time Dependabot will run
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "06:00"
