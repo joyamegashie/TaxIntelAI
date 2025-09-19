@@ -1,15 +1,73 @@
 version: 2
 updates:
-  - package-ecosystem: "npm" # or "pip", "maven", "composer", etc.
-    directory: "/"           # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: "daily"      # Options: daily, weekly, monthly
-      time: "06:00"          # UTC time Dependabot will run
+      interval: "daily"
+      time: "06:00"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "18:00"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
       time: "06:00"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "18:00"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels:
+      - "dependencies"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
