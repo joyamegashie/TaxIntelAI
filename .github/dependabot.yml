@@ -1,14 +1,14 @@
 version: 2
 updates:
+  # --- Application dependencies (npm) ---
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
       time: "06:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
     rebase-strategy: "auto"
-    labels:
-      - "dependencies"
+    labels: ["dependencies", "npm"]
     allow:
       - dependency-type: "all"
     ignore:
@@ -23,12 +23,27 @@ updates:
     schedule:
       interval: "daily"
       time: "18:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
     rebase-strategy: "auto"
-    labels:
-      - "dependencies"
+    labels: ["dependencies", "npm"]
     allow:
       - dependency-type: "all"
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  # --- GitHub Actions (CI/CD workflows) ---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "06:30"
+    open-pull-requests-limit: 20
+    rebase-strategy: "auto"
+    labels: ["dependencies", "ci"]
     ignore:
       - dependency-type: "all"
         update-types: ["version-update:semver-major"]
@@ -40,16 +55,86 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      time: "06:00"
-    open-pull-requests-limit: 10
+      time: "18:30"
+    open-pull-requests-limit: 20
     rebase-strategy: "auto"
-    labels:
-      - "dependencies"
-    allow:
-      - dependency-type: "all"
+    labels: ["dependencies", "ci"]
     ignore:
       - dependency-type: "all"
         update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  # --- Dockerfiles (base images) ---
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels: ["dependencies", "docker"]
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "19:00"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels: ["dependencies", "docker"]
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  # --- Terraform (infrastructure code) ---
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "07:30"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels: ["dependencies", "infra"]
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "19:30"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    labels: ["dependencies", "infra"]
+    ignore:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-major"]
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  # --- Security Updates (immediate, any ecosystem) ---
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels: ["security", "npm"]
+    security-updates-only: true
     automerge: true
     automerge-type: "pr"
     target-branch: "main"
@@ -58,16 +143,28 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      time: "18:00"
-    open-pull-requests-limit: 10
-    rebase-strategy: "auto"
-    labels:
-      - "dependencies"
-    allow:
-      - dependency-type: "all"
-    ignore:
-      - dependency-type: "all"
-        update-types: ["version-update:semver-major"]
+    labels: ["security", "ci"]
+    security-updates-only: true
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels: ["security", "docker"]
+    security-updates-only: true
+    automerge: true
+    automerge-type: "pr"
+    target-branch: "main"
+
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels: ["security", "infra"]
+    security-updates-only: true
     automerge: true
     automerge-type: "pr"
     target-branch: "main"
