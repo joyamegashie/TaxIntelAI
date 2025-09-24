@@ -17,7 +17,7 @@ class User(UserBase):
     id: int
     is_active: bool
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -50,7 +50,7 @@ class InformalBusiness(InformalBusinessBase):
     tax_potential: Optional[float] = None
     detected_at: datetime
     confidence_score: Optional[float] = None
-    
+
     class Config:
         from_attributes = True
 
@@ -72,7 +72,7 @@ class TaxOpportunity(TaxOpportunityBase):
     id: int
     confidence_level: Optional[float] = None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -94,7 +94,7 @@ class PolicySimulation(PolicySimulationBase):
     id: int
     impact_percentage: Optional[float] = None
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -117,7 +117,7 @@ class GeoFiscalDataCreate(GeoFiscalDataBase):
 class GeoFiscalData(GeoFiscalDataBase):
     id: int
     last_updated: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -148,4 +148,3 @@ class PolicyImpactResponse(BaseModel):
     projected_collection: float
     impact_percentage: float
     recommendations: List[str]
-

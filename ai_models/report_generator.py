@@ -9,48 +9,54 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ReportGenerator:
     """
     GPT-powered document and report generation for tax intelligence
     """
-    
+
     def __init__(self, api_key: Optional[str] = None):
         # Use environment variable or provided API key
-        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if self.api_key:
             openai.api_key = self.api_key
         else:
-            logger.warning("No OpenAI API key provided. Report generation will use templates only.")
-        
+            logger.warning(
+                "No OpenAI API key provided. Report generation will use templates only."
+            )
+
         self.model = "gpt-3.5-turbo"
         self.max_tokens = 2000
-    
+
     def generate_tax_opportunity_report(self, data: Dict) -> str:
         """
         Generate a comprehensive tax opportunity report
         """
         if not self.api_key:
             return self._generate_template_report(data)
-        
+
         try:
             prompt = self._create_tax_opportunity_prompt(data)
-            
+
             response = openai.ChatCompletion.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a tax policy expert and data analyst specializing in informal economy taxation in African countries."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a tax policy expert and data analyst specializing in informal economy taxation in African countries.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=self.max_tokens,
-                temperature=0.7
+                temperature=0.7,
             )
-            
+
             return response.choices[0].message.content
-            
+
         except Exception as e:
             logger.error(f"Failed to generate GPT report: {e}")
             return self._generate_template_report(data)
-    
+
     def _create_tax_opportunity_prompt(self, data: Dict) -> str:
         """
         Create a detailed prompt for tax opportunity report generation
@@ -86,38 +92,46 @@ class ReportGenerator:
         Format the report professionally with clear headings and actionable recommendations.
         Focus on practical implementation strategies for African tax authorities.
         """
-        
+
         return prompt
-    
+
     def _format_sector_data(self, sectors: List[Dict]) -> str:
         """Format sector data for the prompt"""
         if not sectors:
             return "No sector data available"
-        
+
         formatted = []
         for sector in sectors:
-            formatted.append(f"- {sector.get('name', 'Unknown')}: {sector.get('business_count', 0)} businesses, ${sector.get('potential_tax', 0):,.2f} potential tax")
-        
+            formatted.append(
+                f"- {sector.get('name', 'Unknown')}: {sector.get('business_count', 0)} businesses, ${sector.get('potential_tax', 0):,.2f} potential tax"
+            )
+
         return "\n".join(formatted)
-    
+
     def _format_business_types(self, business_types: List[Dict]) -> str:
         """Format business types for the prompt"""
         if not business_types:
             return "No business type data available"
-        
+
         formatted = []
         for btype in business_types:
-            formatted.append(f"- {btype.get('type', 'Unknown')}: {btype.get('count', 0)} businesses")
-        
+            formatted.append(
+                f"- {btype.get('type', 'Unknown')}: {btype.get('count', 0)} businesses"
+            )
+
         return "\n".join(formatted)
-    
-    def generate_policy_impact_report(self, baseline: Dict, projected: Dict, policy_details: Dict) -> str:
+
+    def generate_policy_impact_report(
+        self, baseline: Dict, projected: Dict, policy_details: Dict
+    ) -> str:
         """
         Generate a policy impact assessment report
         """
         if not self.api_key:
-            return self._generate_template_policy_report(baseline, projected, policy_details)
-        
+            return self._generate_template_policy_report(
+                baseline, projected, policy_details
+            )
+
         try:
             prompt = f"""
             Generate a detailed policy impact assessment report for the following tax policy simulation:
@@ -152,54 +166,63 @@ class ReportGenerator:
 
             Format as a professional policy brief suitable for government decision-makers.
             """
-            
+
             response = openai.ChatCompletion.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a senior tax policy advisor with expertise in African tax systems and informal economy formalization."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a senior tax policy advisor with expertise in African tax systems and informal economy formalization.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=self.max_tokens,
-                temperature=0.6
+                temperature=0.6,
             )
-            
+
             return response.choices[0].message.content
-            
+
         except Exception as e:
             logger.error(f"Failed to generate policy impact report: {e}")
-            return self._generate_template_policy_report(baseline, projected, policy_details)
-    
+            return self._generate_template_policy_report(
+                baseline, projected, policy_details
+            )
+
     def generate_business_intelligence_summary(self, business_data: List[Dict]) -> str:
         """
         Generate a business intelligence summary from detected businesses
         """
         if not self.api_key:
             return self._generate_template_business_summary(business_data)
-        
+
         # Aggregate data for analysis
         total_businesses = len(business_data)
-        total_revenue = sum(b.get('estimated_revenue', 0) for b in business_data)
-        total_tax_potential = sum(b.get('tax_potential', 0) for b in business_data)
-        avg_confidence = sum(b.get('confidence_score', 0) for b in business_data) / total_businesses if total_businesses > 0 else 0
-        
+        total_revenue = sum(b.get("estimated_revenue", 0) for b in business_data)
+        total_tax_potential = sum(b.get("tax_potential", 0) for b in business_data)
+        avg_confidence = (
+            sum(b.get("confidence_score", 0) for b in business_data) / total_businesses
+            if total_businesses > 0
+            else 0
+        )
+
         # Group by business type
         business_types = {}
         for business in business_data:
-            btype = business.get('business_type', 'Unknown')
+            btype = business.get("business_type", "Unknown")
             if btype not in business_types:
-                business_types[btype] = {'count': 0, 'revenue': 0}
-            business_types[btype]['count'] += 1
-            business_types[btype]['revenue'] += business.get('estimated_revenue', 0)
-        
+                business_types[btype] = {"count": 0, "revenue": 0}
+            business_types[btype]["count"] += 1
+            business_types[btype]["revenue"] += business.get("estimated_revenue", 0)
+
         # Group by region
         regions = {}
         for business in business_data:
-            region = business.get('region', 'Unknown')
+            region = business.get("region", "Unknown")
             if region not in regions:
-                regions[region] = {'count': 0, 'revenue': 0}
-            regions[region]['count'] += 1
-            regions[region]['revenue'] += business.get('estimated_revenue', 0)
-        
+                regions[region] = {"count": 0, "revenue": 0}
+            regions[region]["count"] += 1
+            regions[region]["revenue"] += business.get("estimated_revenue", 0)
+
         try:
             prompt = f"""
             Analyze the following informal business intelligence data and provide strategic insights:
@@ -227,37 +250,44 @@ class ReportGenerator:
 
             Focus on actionable insights for tax authorities and policy makers.
             """
-            
+
             response = openai.ChatCompletion.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a business intelligence analyst specializing in informal economy analysis and tax policy in developing countries."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a business intelligence analyst specializing in informal economy analysis and tax policy in developing countries.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=self.max_tokens,
-                temperature=0.7
+                temperature=0.7,
             )
-            
+
             return response.choices[0].message.content
-            
+
         except Exception as e:
             logger.error(f"Failed to generate business intelligence summary: {e}")
             return self._generate_template_business_summary(business_data)
-    
+
     def _format_business_type_analysis(self, business_types: Dict) -> str:
         """Format business type data for analysis"""
         formatted = []
         for btype, data in business_types.items():
-            formatted.append(f"- {btype}: {data['count']} businesses, ${data['revenue']:,.2f} total revenue")
+            formatted.append(
+                f"- {btype}: {data['count']} businesses, ${data['revenue']:,.2f} total revenue"
+            )
         return "\n".join(formatted)
-    
+
     def _format_regional_analysis(self, regions: Dict) -> str:
         """Format regional data for analysis"""
         formatted = []
         for region, data in regions.items():
-            formatted.append(f"- {region}: {data['count']} businesses, ${data['revenue']:,.2f} total revenue")
+            formatted.append(
+                f"- {region}: {data['count']} businesses, ${data['revenue']:,.2f} total revenue"
+            )
         return "\n".join(formatted)
-    
+
     def _generate_template_report(self, data: Dict) -> str:
         """
         Generate a template-based report when GPT is not available
@@ -313,14 +343,16 @@ This report analyzes tax opportunities in {data.get('region', 'the specified reg
 ---
 *This report was generated using TaxIntel AI platform.*
         """
-        
+
         return report
-    
-    def _generate_template_policy_report(self, baseline: Dict, projected: Dict, policy_details: Dict) -> str:
+
+    def _generate_template_policy_report(
+        self, baseline: Dict, projected: Dict, policy_details: Dict
+    ) -> str:
         """Generate template policy impact report"""
-        additional_revenue = projected.get('additional_revenue', 0)
-        percentage_increase = projected.get('percentage_increase', 0)
-        
+        additional_revenue = projected.get("additional_revenue", 0)
+        percentage_increase = projected.get("percentage_increase", 0)
+
         report = f"""
 # POLICY IMPACT ASSESSMENT REPORT
 
@@ -383,15 +415,15 @@ This assessment evaluates the projected impact of implementing {policy_details.g
 ---
 *This assessment was generated using TaxIntel AI platform.*
         """
-        
+
         return report
-    
+
     def _generate_template_business_summary(self, business_data: List[Dict]) -> str:
         """Generate template business intelligence summary"""
         total_businesses = len(business_data)
-        total_revenue = sum(b.get('estimated_revenue', 0) for b in business_data)
-        total_tax_potential = sum(b.get('tax_potential', 0) for b in business_data)
-        
+        total_revenue = sum(b.get("estimated_revenue", 0) for b in business_data)
+        total_tax_potential = sum(b.get("tax_potential", 0) for b in business_data)
+
         report = f"""
 # BUSINESS INTELLIGENCE SUMMARY
 
@@ -434,67 +466,69 @@ Businesses are distributed across various regions, requiring tailored approaches
 ---
 *This summary was generated using TaxIntel AI platform.*
         """
-        
+
         return report
+
 
 # Example usage and testing
 if __name__ == "__main__":
     # Initialize report generator
     generator = ReportGenerator()
-    
+
     # Test data for tax opportunity report
     test_data = {
-        'region': 'Nairobi Central',
-        'business_count': 150,
-        'total_revenue': 2500000,
-        'current_collection': 180000,
-        'potential_tax': 400000,
-        'tax_gap': 220000,
-        'collection_efficiency': 0.45,
-        'compliance_rate': 0.6,
-        'sectors': [
-            {'name': 'Retail', 'business_count': 60, 'potential_tax': 160000},
-            {'name': 'Services', 'business_count': 45, 'potential_tax': 135000},
-            {'name': 'Food & Beverage', 'business_count': 45, 'potential_tax': 105000}
+        "region": "Nairobi Central",
+        "business_count": 150,
+        "total_revenue": 2500000,
+        "current_collection": 180000,
+        "potential_tax": 400000,
+        "tax_gap": 220000,
+        "collection_efficiency": 0.45,
+        "compliance_rate": 0.6,
+        "sectors": [
+            {"name": "Retail", "business_count": 60, "potential_tax": 160000},
+            {"name": "Services", "business_count": 45, "potential_tax": 135000},
+            {"name": "Food & Beverage", "business_count": 45, "potential_tax": 105000},
         ],
-        'business_types': [
-            {'type': 'Market Vendor', 'count': 50},
-            {'type': 'Small Retail', 'count': 40},
-            {'type': 'Service Provider', 'count': 35},
-            {'type': 'Roadside Shop', 'count': 25}
-        ]
+        "business_types": [
+            {"type": "Market Vendor", "count": 50},
+            {"type": "Small Retail", "count": 40},
+            {"type": "Service Provider", "count": 35},
+            {"type": "Roadside Shop", "count": 25},
+        ],
     }
-    
+
     # Generate tax opportunity report
     print("Generating Tax Opportunity Report...")
     tax_report = generator.generate_tax_opportunity_report(test_data)
     print(tax_report)
-    
-    print("\n" + "="*80 + "\n")
-    
+
+    print("\n" + "=" * 80 + "\n")
+
     # Test policy impact report
     baseline = {
-        'current_collection': 180000,
-        'compliance_rate': 0.6,
-        'collection_efficiency': 0.45
+        "current_collection": 180000,
+        "compliance_rate": 0.6,
+        "collection_efficiency": 0.45,
     }
-    
-    projected = {
-        'projected_collection': 280000,
-        'compliance_rate': 0.75,
-        'collection_efficiency': 0.6,
-        'additional_revenue': 100000,
-        'percentage_increase': 55.6
-    }
-    
-    policy_details = {
-        'name': 'Digital Tax Registration Initiative',
-        'type': 'Digitalization',
-        'region': 'Nairobi Central',
-        'timeline': '12 months'
-    }
-    
-    print("Generating Policy Impact Report...")
-    policy_report = generator.generate_policy_impact_report(baseline, projected, policy_details)
-    print(policy_report)
 
+    projected = {
+        "projected_collection": 280000,
+        "compliance_rate": 0.75,
+        "collection_efficiency": 0.6,
+        "additional_revenue": 100000,
+        "percentage_increase": 55.6,
+    }
+
+    policy_details = {
+        "name": "Digital Tax Registration Initiative",
+        "type": "Digitalization",
+        "region": "Nairobi Central",
+        "timeline": "12 months",
+    }
+
+    print("Generating Policy Impact Report...")
+    policy_report = generator.generate_policy_impact_report(
+        baseline, projected, policy_details
+    )
+    print(policy_report)

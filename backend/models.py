@@ -5,7 +5,7 @@ from database import Base
 
 class User(Base):
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
@@ -16,7 +16,7 @@ class User(Base):
 
 class InformalBusiness(Base):
     __tablename__ = "informal_businesses"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     latitude = Column(Float)
@@ -31,7 +31,7 @@ class InformalBusiness(Base):
 
 class TaxOpportunity(Base):
     __tablename__ = "tax_opportunities"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     region = Column(String, index=True)
     sector = Column(String)
@@ -44,7 +44,7 @@ class TaxOpportunity(Base):
 
 class PolicySimulation(Base):
     __tablename__ = "policy_simulations"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     simulation_name = Column(String)
     region = Column(String)
@@ -58,7 +58,7 @@ class PolicySimulation(Base):
 
 class GeoFiscalData(Base):
     __tablename__ = "geofiscal_data"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     region = Column(String, index=True)
     latitude = Column(Float)
@@ -68,4 +68,3 @@ class GeoFiscalData(Base):
     tax_collection_rate = Column(Float)
     informal_economy_percentage = Column(Float)
     last_updated = Column(DateTime(timezone=True), server_default=func.now())
-

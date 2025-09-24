@@ -9,12 +9,13 @@ from models import PolicySimulation, TaxOpportunity, InformalBusiness, User
 from schemas import (
     PolicySimulationCreate,
     PolicySimulation as PolicySimulationSchema,
-    PolicyImpactResponse
+    PolicyImpactResponse,
 )
 from auth import get_current_user
 from security import limiter, sanitize_input
 
 router = APIRouter()
+
 
 @router.post("/simulate", response_model=PolicyImpactResponse)
 @limiter.limit("20/minute")
@@ -22,41 +23,46 @@ async def create_policy_simulation(
     request: Request,
     simulation: PolicySimulationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Create and run a new policy simulation"""
     # Sanitize inputs
     simulation_name = sanitize_input(simulation.simulation_name)
     region = sanitize_input(simulation.region)
     policy_type = sanitize_input(simulation.policy_type)
-    
+
     # Calculate impact percentage
     if simulation.current_collection > 0:
-        impact_percentage = ((simulation.projected_collection - simulation.current_collection) / 
-                           simulation.current_collection) * 100
+        impact_percentage = (
+            (simulation.projected_collection - simulation.current_collection)
+            / simulation.current_collection
+        ) * 100
     else:
         impact_percentage = 100.0  # If starting from zero
-    
+
     # Generate recommendations based on policy type and impact
     recommendations = generate_policy_recommendations(
-        policy_type, impact_percentage, simulation.current_collection, simulation.projected_collection
+        policy_type,
+        impact_percentage,
+        simulation.current_collection,
+        simulation.projected_collection,
     )
-    
+
     # Store simulation data
     simulation_data = {
         "policy_parameters": simulation.simulation_data or {},
         "assumptions": {
             "compliance_rate": 0.7,
             "implementation_timeline": "12 months",
-            "administrative_cost_percentage": 0.05
+            "administrative_cost_percentage": 0.05,
         },
         "risk_factors": [
             "Economic downturn could reduce projected revenue",
             "Resistance from informal sector participants",
-            "Administrative capacity constraints"
-        ]
+            "Administrative capacity constraints",
+        ],
     }
-    
+
     db_simulation = PolicySimulation(
         simulation_name=simulation_name,
         region=region,
@@ -64,19 +70,19 @@ async def create_policy_simulation(
         current_collection=simulation.current_collection,
         projected_collection=simulation.projected_collection,
         impact_percentage=impact_percentage,
-        simulation_data=json.dumps(simulation_data)
+        simulation_data=json.dumps(simulation_data),
     )
-    
+
     db.add(db_simulation)
     db.commit()
     db.refresh(db_simulation)
-    
+
     return PolicyImpactResponse(
         simulation_id=db_simulation.id,
         current_collection=simulation.current_collection,
         projected_collection=simulation.projected_collection,
         impact_percentage=impact_percentage,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
@@ -89,20 +95,20 @@ async def get_policy_simulations(
     region: Optional[str] = Query(None),
     policy_type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get list of policy simulations with optional filters"""
     query = db.query(PolicySimulation)
-    
+
     # Apply filters
     if region:
         region = sanitize_input(region)
         query = query.filter(PolicySimulation.region.ilike(f"%{region}%"))
-    
+
     if policy_type:
         policy_type = sanitize_input(policy_type)
         query = query.filter(PolicySimulation.policy_type.ilike(f"%{policy_type}%"))
-    
+
     simulations = query.offset(skip).limit(limit).all()
     return simulations
 
@@ -111,9 +117,11 @@ async def get_policy_simulations(
 @limiter.limit("30/minute")
 async def compare_policy_scenarios(
     request: Request,
-    simulation_ids: str = Query(..., description="Comma-separated list of simulation IDs"),
+    simulation_ids: str = Query(
+        ..., description="Comma-separated list of simulation IDs"
+    ),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Compare multiple policy simulation scenarios"""
     try:
@@ -121,42 +129,46 @@ async def compare_policy_scenarios(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid simulation IDs format"
+            detail="Invalid simulation IDs format",
         )
-    
+
     if len(sim_ids) > 5:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 5 simulations allowed for comparison"
+            detail="Maximum 5 simulations allowed for comparison",
         )
-    
-    simulations = db.query(PolicySimulation).filter(PolicySimulation.id.in_(sim_ids)).all()
-    
+
+    simulations = (
+        db.query(PolicySimulation).filter(PolicySimulation.id.in_(sim_ids)).all()
+    )
+
     if len(simulations) != len(sim_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="One or more simulations not found"
+            detail="One or more simulations not found",
         )
-    
+
     # Prepare comparison data
     comparison_data = []
     for sim in simulations:
-        comparison_data.append({
-            "simulation_id": sim.id,
-            "simulation_name": sim.simulation_name,
-            "region": sim.region,
-            "policy_type": sim.policy_type,
-            "current_collection": sim.current_collection,
-            "projected_collection": sim.projected_collection,
-            "impact_percentage": sim.impact_percentage,
-            "net_increase": sim.projected_collection - sim.current_collection,
-            "created_at": sim.created_at.isoformat()
-        })
-    
+        comparison_data.append(
+            {
+                "simulation_id": sim.id,
+                "simulation_name": sim.simulation_name,
+                "region": sim.region,
+                "policy_type": sim.policy_type,
+                "current_collection": sim.current_collection,
+                "projected_collection": sim.projected_collection,
+                "impact_percentage": sim.impact_percentage,
+                "net_increase": sim.projected_collection - sim.current_collection,
+                "created_at": sim.created_at.isoformat(),
+            }
+        )
+
     # Calculate summary insights
     best_impact = max(comparison_data, key=lambda x: x["impact_percentage"])
     highest_revenue = max(comparison_data, key=lambda x: x["net_increase"])
-    
+
     return {
         "simulations": comparison_data,
         "summary": {
@@ -164,23 +176,26 @@ async def compare_policy_scenarios(
             "best_impact_percentage": {
                 "simulation_id": best_impact["simulation_id"],
                 "simulation_name": best_impact["simulation_name"],
-                "impact_percentage": best_impact["impact_percentage"]
+                "impact_percentage": best_impact["impact_percentage"],
             },
             "highest_revenue_increase": {
                 "simulation_id": highest_revenue["simulation_id"],
                 "simulation_name": highest_revenue["simulation_name"],
-                "net_increase": highest_revenue["net_increase"]
+                "net_increase": highest_revenue["net_increase"],
             },
-            "average_impact": round(sum(s["impact_percentage"] for s in comparison_data) / len(comparison_data), 2)
-        }
+            "average_impact": round(
+                sum(s["impact_percentage"] for s in comparison_data)
+                / len(comparison_data),
+                2,
+            ),
+        },
     }
 
 
 @router.get("/templates")
 @limiter.limit("50/minute")
 async def get_policy_templates(
-    request: Request,
-    current_user: User = Depends(get_current_user)
+    request: Request, current_user: User = Depends(get_current_user)
 ):
     """Get predefined policy simulation templates"""
     templates = {
@@ -195,8 +210,8 @@ async def get_policy_templates(
                 "registration_incentives": True,
                 "mobile_platform": True,
                 "simplified_procedures": True,
-                "grace_period_months": 6
-            }
+                "grace_period_months": 6,
+            },
         },
         "simplified_tax_regime": {
             "name": "Simplified Tax Regime for SMEs",
@@ -209,8 +224,8 @@ async def get_policy_templates(
                 "flat_rate_percentage": 3,
                 "turnover_threshold": 100000,
                 "quarterly_payments": True,
-                "online_filing": True
-            }
+                "online_filing": True,
+            },
         },
         "tax_amnesty_program": {
             "name": "Tax Amnesty and Formalization Program",
@@ -223,8 +238,8 @@ async def get_policy_templates(
                 "amnesty_period_months": 12,
                 "penalty_waiver_percentage": 100,
                 "future_compliance_requirements": True,
-                "business_support_services": True
-            }
+                "business_support_services": True,
+            },
         },
         "mobile_tax_collection": {
             "name": "Mobile Money Tax Collection",
@@ -237,8 +252,8 @@ async def get_policy_templates(
                 "mobile_money_integration": True,
                 "automatic_deduction": False,
                 "payment_reminders": True,
-                "transaction_fee_subsidy": True
-            }
+                "transaction_fee_subsidy": True,
+            },
         },
         "property_tax_modernization": {
             "name": "Property Tax Modernization",
@@ -251,11 +266,11 @@ async def get_policy_templates(
                 "satellite_assessment": True,
                 "ai_valuation": True,
                 "online_appeals_process": True,
-                "phased_implementation": True
-            }
-        }
+                "phased_implementation": True,
+            },
+        },
     }
-    
+
     return {"templates": templates}
 
 
@@ -265,32 +280,39 @@ async def generate_policy_report(
     request: Request,
     simulation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Generate a comprehensive policy impact report"""
-    simulation = db.query(PolicySimulation).filter(PolicySimulation.id == simulation_id).first()
-    
+    simulation = (
+        db.query(PolicySimulation).filter(PolicySimulation.id == simulation_id).first()
+    )
+
     if not simulation:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Policy simulation not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Policy simulation not found"
         )
-    
+
     # Get related data for the region
-    region_businesses = db.query(InformalBusiness).filter(
-        InformalBusiness.region.ilike(f"%{simulation.region}%")
-    ).count()
-    
-    region_tax_opportunities = db.query(TaxOpportunity).filter(
-        TaxOpportunity.region.ilike(f"%{simulation.region}%")
-    ).count()
-    
+    region_businesses = (
+        db.query(InformalBusiness)
+        .filter(InformalBusiness.region.ilike(f"%{simulation.region}%"))
+        .count()
+    )
+
+    region_tax_opportunities = (
+        db.query(TaxOpportunity)
+        .filter(TaxOpportunity.region.ilike(f"%{simulation.region}%"))
+        .count()
+    )
+
     # Parse simulation data
     try:
-        simulation_data = json.loads(simulation.simulation_data) if simulation.simulation_data else {}
+        simulation_data = (
+            json.loads(simulation.simulation_data) if simulation.simulation_data else {}
+        )
     except json.JSONDecodeError:
         simulation_data = {}
-    
+
     # Generate comprehensive report
     report = {
         "executive_summary": {
@@ -299,75 +321,89 @@ async def generate_policy_report(
             "policy_type": simulation.policy_type,
             "current_collection": simulation.current_collection,
             "projected_collection": simulation.projected_collection,
-            "revenue_increase": simulation.projected_collection - simulation.current_collection,
+            "revenue_increase": simulation.projected_collection
+            - simulation.current_collection,
             "impact_percentage": simulation.impact_percentage,
-            "confidence_level": "Medium"
+            "confidence_level": "Medium",
         },
         "regional_context": {
             "informal_businesses_identified": region_businesses,
             "tax_opportunities_mapped": region_tax_opportunities,
-            "economic_profile": f"Region with {region_businesses} identified informal businesses"
+            "economic_profile": f"Region with {region_businesses} identified informal businesses",
         },
         "implementation_plan": {
             "phases": [
                 {
                     "phase": 1,
                     "duration": "Months 1-3",
-                    "activities": ["Policy design", "Stakeholder consultation", "Legal framework"],
-                    "milestones": ["Policy document approved", "Legal amendments passed"]
+                    "activities": [
+                        "Policy design",
+                        "Stakeholder consultation",
+                        "Legal framework",
+                    ],
+                    "milestones": [
+                        "Policy document approved",
+                        "Legal amendments passed",
+                    ],
                 },
                 {
                     "phase": 2,
                     "duration": "Months 4-6",
-                    "activities": ["System development", "Staff training", "Pilot implementation"],
-                    "milestones": ["Systems operational", "Staff certified", "Pilot completed"]
+                    "activities": [
+                        "System development",
+                        "Staff training",
+                        "Pilot implementation",
+                    ],
+                    "milestones": [
+                        "Systems operational",
+                        "Staff certified",
+                        "Pilot completed",
+                    ],
                 },
                 {
                     "phase": 3,
                     "duration": "Months 7-12",
                     "activities": ["Full rollout", "Monitoring", "Adjustments"],
-                    "milestones": ["Full implementation", "First review completed"]
-                }
+                    "milestones": ["Full implementation", "First review completed"],
+                },
             ]
         },
         "risk_assessment": {
             "high_risks": [
                 "Political resistance to change",
-                "Insufficient administrative capacity"
+                "Insufficient administrative capacity",
             ],
             "medium_risks": [
                 "Technology adoption challenges",
-                "Taxpayer compliance issues"
+                "Taxpayer compliance issues",
             ],
-            "low_risks": [
-                "Minor system integration issues"
-            ],
+            "low_risks": ["Minor system integration issues"],
             "mitigation_strategies": [
                 "Comprehensive stakeholder engagement",
                 "Phased implementation approach",
-                "Continuous monitoring and adjustment"
-            ]
+                "Continuous monitoring and adjustment",
+            ],
         },
         "success_metrics": {
             "primary_kpis": [
                 "Tax revenue increase",
                 "Number of new registrations",
-                "Compliance rate improvement"
+                "Compliance rate improvement",
             ],
             "secondary_kpis": [
                 "Administrative efficiency gains",
                 "Taxpayer satisfaction scores",
-                "Cost-benefit ratio"
-            ]
+                "Cost-benefit ratio",
+            ],
         },
         "recommendations": generate_policy_recommendations(
-            simulation.policy_type, 
+            simulation.policy_type,
             simulation.impact_percentage,
             simulation.current_collection,
-            simulation.projected_collection
-        )
+            simulation.projected_collection,
+        ),
     }
-    
+
     return report
 
 
@@ -377,67 +413,81 @@ async def get_policy_simulation(
     request: Request,
     simulation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get a specific policy simulation by ID"""
-    simulation = db.query(PolicySimulation).filter(PolicySimulation.id == simulation_id).first()
-    
+    simulation = (
+        db.query(PolicySimulation).filter(PolicySimulation.id == simulation_id).first()
+    )
+
     if not simulation:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Policy simulation not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Policy simulation not found"
         )
-    
+
     return simulation
 
 
 def generate_policy_recommendations(
-    policy_type: str, 
-    impact_percentage: float, 
-    current_collection: float, 
-    projected_collection: float
+    policy_type: str,
+    impact_percentage: float,
+    current_collection: float,
+    projected_collection: float,
 ) -> List[str]:
     """Generate policy recommendations based on simulation results"""
     recommendations = []
-    
+
     # Base recommendations
     if impact_percentage > 50:
-        recommendations.append("High impact potential - prioritize for immediate implementation")
+        recommendations.append(
+            "High impact potential - prioritize for immediate implementation"
+        )
     elif impact_percentage > 25:
         recommendations.append("Moderate impact - consider phased implementation")
     else:
-        recommendations.append("Low impact - review policy parameters or consider alternatives")
-    
+        recommendations.append(
+            "Low impact - review policy parameters or consider alternatives"
+        )
+
     # Policy-specific recommendations
     if policy_type.lower() in ["digitalization", "digital"]:
-        recommendations.extend([
-            "Ensure robust digital infrastructure and internet connectivity",
-            "Provide comprehensive digital literacy training for taxpayers",
-            "Implement strong cybersecurity measures"
-        ])
+        recommendations.extend(
+            [
+                "Ensure robust digital infrastructure and internet connectivity",
+                "Provide comprehensive digital literacy training for taxpayers",
+                "Implement strong cybersecurity measures",
+            ]
+        )
     elif policy_type.lower() in ["simplification", "simplified"]:
-        recommendations.extend([
-            "Conduct extensive taxpayer education campaigns",
-            "Establish clear guidelines and procedures",
-            "Provide multilingual support materials"
-        ])
+        recommendations.extend(
+            [
+                "Conduct extensive taxpayer education campaigns",
+                "Establish clear guidelines and procedures",
+                "Provide multilingual support materials",
+            ]
+        )
     elif policy_type.lower() == "amnesty":
-        recommendations.extend([
-            "Set clear eligibility criteria and deadlines",
-            "Combine with business formalization support services",
-            "Ensure strong enforcement post-amnesty period"
-        ])
+        recommendations.extend(
+            [
+                "Set clear eligibility criteria and deadlines",
+                "Combine with business formalization support services",
+                "Ensure strong enforcement post-amnesty period",
+            ]
+        )
     elif policy_type.lower() in ["mobile", "mobile_integration"]:
-        recommendations.extend([
-            "Partner with established mobile money providers",
-            "Ensure transaction security and data protection",
-            "Provide incentives for mobile payment adoption"
-        ])
-    
+        recommendations.extend(
+            [
+                "Partner with established mobile money providers",
+                "Ensure transaction security and data protection",
+                "Provide incentives for mobile payment adoption",
+            ]
+        )
+
     # Revenue-based recommendations
     revenue_increase = projected_collection - current_collection
     if revenue_increase > 1000000:  # Large revenue increase
-        recommendations.append("Allocate additional resources for implementation given high revenue potential")
-    
-    return recommendations
+        recommendations.append(
+            "Allocate additional resources for implementation given high revenue potential"
+        )
 
+    return recommendations
