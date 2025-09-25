@@ -130,7 +130,7 @@ jobs:
       # --- Open PR if unresolved issues remain ---
       - name: Open Pull Request for Manual Review
         if: failure()
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Fix deployment issues"
           title: "Render-Safe Autopilot: Manual Fix Required"
