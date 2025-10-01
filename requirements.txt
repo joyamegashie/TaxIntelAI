@@ -1,0 +1,3 @@
+# Python deps
+Flask
+SQLAlchemy
