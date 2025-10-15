@@ -48,7 +48,6 @@
       "description": "Mark and separate major updates as breaking changes",
       "matchUpdateTypes": ["major"],
       "labels": ["breaking-change"],
-      "separateMajorMinor": true,
       "prPriority": 2,
       "prTitle": "feat(deps): upgrade {{depName}} to {{newVersion}} (major)"
     },
@@ -81,13 +80,10 @@
     "🧹 Runs depcheck for unused dependencies cleanup."
   ],
 
-  // 🗓️ Quiet operation settings
   "suppressNotifications": ["prEditedNotification"],
   "timezone": "Africa/Accra",
   "schedule": [
-    "after 6am on monday",
-    "before 6pm on friday",
-    "every weekend: off"
+    "after 6am on monday and before 6pm on friday"
   ],
   "dependencyDashboardHeader": "🗓️ Weekly Dependency Summary Report",
   "dependencyDashboardAutoclose": false,
