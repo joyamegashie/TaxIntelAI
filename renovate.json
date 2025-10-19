@@ -1,95 +1,95 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    ":semanticCommits",
-    ":rebaseStalePrs",
-    "group:allNonMajor",
-    ":automergeDisabled",
-    ":prHourlyLimit2"
-  ],
-  "enabledManagers": [
-    "npm",
-    "pip_requirements",
-    "dockerfile",
-    "github-actions",
-    "terraform",
-    "gradle",
-    "composer",
-    "maven",
-    "helm-values",
-    "kubernetes"
-  ],
-  "labels": ["dependencies", "renovate-bot"],
-  "rangeStrategy": "bump",
-  "vulnerabilityAlerts": {
-    "enabled": true,
-    "labels": ["security", "high-priority"]
-  },
-  "packageRules": [
-    {
-      "description": "Auto-approve and auto-merge safe (minor + patch) updates",
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true,
-      "automergeType": "branch",
-      "platformAutomerge": true,
-      "matchManagers": [
-        "npm",
-        "pip_requirements",
-        "dockerfile",
-        "github-actions",
-        "terraform"
-      ],
-      "reviewers": [],
-      "labels": ["automerge", "safe-update"],
-      "prTitle": "chore(deps): auto-merge {{depName}} to {{newVersion}}"
-    },
-    {
-      "description": "Mark and separate major updates as breaking changes",
-      "matchUpdateTypes": ["major"],
-      "labels": ["breaking-change"],
-      "prPriority": 2,
-      "prTitle": "feat(deps): upgrade {{depName}} to {{newVersion}} (major)"
-    },
-    {
-      "description": "Group infrastructure and CI updates together",
-      "matchManagers": ["terraform", "dockerfile", "kubernetes", "github-actions"],
-      "groupName": "infrastructure-and-CI-dependencies",
-      "groupSlug": "infra-ci"
-    },
-    {
-      "description": "Detect and remove unused npm dependencies",
-      "matchManagers": ["npm"],
-      "postUpgradeTasks": {
-        "commands": [
-          "npx depcheck --json || true"
-        ],
-        "executionMode": "update"
-      }
-    }
-  ],
-  "rebaseWhen": "behind-base-branch",
-  "dependencyDashboard": true,
-  "dependencyDashboardApproval": false,
-  "osvVulnerabilityAlerts": true,
-  "stabilityDays": 2,
-  "prBodyNotes": [
-    "✅ Auto-approved and merged safe dependency updates.",
-    "🔒 Vulnerability scanning enabled for IaC and packages.",
-    "⚙️ PR title standardized for audit and changelog tracking.",
-    "🧹 Runs depcheck for unused dependencies cleanup."
-  ],
 
-  "suppressNotifications": ["prEditedNotification"],
-  "timezone": "Africa/Accra",
-  "schedule": [
-    "after 6am on monday and before 6pm on friday"
-  ],
-  "dependencyDashboardHeader": "🗓️ Weekly Dependency Summary Report",
-  "dependencyDashboardAutoclose": false,
-  "masterIssue": true,
-  "masterIssueTitle": "🧾 Weekly Dependency Update Report (All Projects)",
-  "commitMessagePrefix": "chore(deps): ",
-  "commitMessageAction": "update dependencies",
-  "commitMessageTopic": "{{depName}}"
+{
+"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+"extends": [
+"config:base",
+":semanticCommits",
+":semanticCommitTypeAll(chore)",
+":dependencyDashboard",
+":disableRateLimiting",
+":timezone(Africa/Nairobi)",
+"group:allNonMajor",
+"schedule:weekly",
+"helpers:pinGitHubActionDigests"
+],
+
+"enabledManagers": [
+"npm",
+"pip_requirements",
+"poetry",
+"dockerfile",
+"github-actions",
+"terraform",
+"gradle",
+"maven",
+"nuget",
+"gomod"
+],
+
+"dependencyDashboard": true,
+"dependencyDashboardApproval": false,
+
+"automerge": false,
+"automergeType": "branch",
+"major": {
+"automerge": false
+},
+"minor": {
+"automerge": true
+},
+"patch": {
+"automerge": true
+},
+
+"rangeStrategy": "bump",
+"rebaseWhen": "behind-base-branch",
+"prCreation": "not-pending",
+"branchConcurrentLimit": 10,
+"prHourlyLimit": 5,
+
+"packageRules": [
+{
+"matchManagers": ["github-actions"],
+"groupName": "GitHub Actions dependencies",
+"schedule": ["before 5am on monday"]
+},
+{
+"matchManagers": ["dockerfile"],
+"groupName": "Docker base images",
+"schedule": ["before 5am on monday"]
+},
+{
+"matchManagers": ["npm", "pip_requirements", "poetry"],
+"groupName": "App dependencies",
+"matchUpdateTypes": ["minor", "patch"],
+"automerge": true,
+"labels": ["dependencies", "automerge"]
+},
+{
+"matchManagers": ["npm", "pip_requirements", "poetry"],
+"groupName": "Major version upgrades",
+"matchUpdateTypes": ["major"],
+"labels": ["dependencies", "breaking-change"]
+},
+{
+"matchDepTypes": ["devDependencies"],
+"groupName": "Development dependencies",
+"automerge": true
+},
+{
+"matchPackagePatterns": ["^eslint", "^prettier", "^jest"],
+"groupName": "Lint/Test tools",
+"automerge": true
+}
+],
+
+"labels": ["dependencies"],
+"commitMessagePrefix": "chore(deps): ",
+"commitBody": "Update dependencies automatically using Mend Renovate.",
+"onboarding": false,
+"suppressNotifications": ["prIgnoreNotification"],
+"prHeader": "🤖 Automated Dependency Update",
+"rebaseStalePrs": true,
+"rollbackPrs": true,
+"dependencyDashboardAutoclose": true
 }
