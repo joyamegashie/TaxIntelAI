@@ -543,5 +543,5 @@ For technical support and questions:
 
 **TaxIntel AI™** - Transforming tax intelligence for the digital age.
 
-*Built with ❤️ for African governments and tax authorities.*
+*Built with ❤️ by Joy Amegashie for African governments and tax authorities.*
 
